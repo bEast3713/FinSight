@@ -1,0 +1,52 @@
+[
+  {
+    "year": 2014,
+    "revenue_billions": 95.7,
+    "net_income_billions": 21.8
+  },
+  {
+    "year": 2015,
+    "revenue_billions": 93.5,
+    "net_income_billions": 24.4
+  },
+  {
+    "year": 2016,
+    "revenue_billions": 95.7,
+    "net_income_billions": 24.7
+  },
+  {
+    "year": 2017,
+    "revenue_billions": 99.6,
+    "net_income_billions": 32.5
+  },
+  {
+    "year": 2018,
+    "revenue_billions": 109.0,
+    "net_income_billions": 36.4
+  },
+  {
+    "year": 2019,
+    "revenue_billions": 115.6,
+    "net_income_billions": 29.1
+  },
+  {
+    "year": 2020,
+    "revenue_billions": 119.5,
+    "net_income_billions": 48.3
+  },
+  {
+    "year": 2021,
+    "revenue_billions": 127.2,
+    "net_income_billions": 48.3
+  },
+  {
+    "year": 2022,
+    "revenue_billions": 128.7,
+    "net_income_billions": 37.7
+  },
+  {
+    "year": 2023,
+    "revenue_billions": 158.1,
+    "net_income_billions": 49.6
+  }
+]

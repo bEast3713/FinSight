@@ -1,0 +1,52 @@
+[
+  {
+    "year": 2014,
+    "total_debt_billions": 33.0,
+    "total_liabilities_billions": 101.1
+  },
+  {
+    "year": 2015,
+    "total_debt_billions": 35.8,
+    "total_liabilities_billions": 103.6
+  },
+  {
+    "year": 2016,
+    "total_debt_billions": 40.4,
+    "total_liabilities_billions": 108.4
+  },
+  {
+    "year": 2017,
+    "total_debt_billions": 45.5,
+    "total_liabilities_billions": 111.9
+  },
+  {
+    "year": 2018,
+    "total_debt_billions": 46.0,
+    "total_liabilities_billions": 109.6
+  },
+  {
+    "year": 2019,
+    "total_debt_billions": 57.8,
+    "total_liabilities_billions": 155.3
+  },
+  {
+    "year": 2020,
+    "total_debt_billions": 54.4,
+    "total_liabilities_billions": 145.6
+  },
+  {
+    "year": 2021,
+    "total_debt_billions": 57.3,
+    "total_liabilities_billions": 132.8
+  },
+  {
+    "year": 2022,
+    "total_debt_billions": 53.0,
+    "total_liabilities_billions": 118.9
+  },
+  {
+    "year": 2023,
+    "total_debt_billions": 52.4,
+    "total_liabilities_billions": 113.0
+  }
+]
