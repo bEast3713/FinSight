@@ -1,13 +1,13 @@
 import type { CompanyKey } from "@/types";
 
 export const COMPANY_OPTIONS: Array<{ key: CompanyKey; label: string }> = [
-  { key: "apple", label: "Apple" },
-  { key: "google", label: "Google" },
-  { key: "microsoft", label: "Microsoft" },
-  { key: "ibm", label: "IBM" },
-  { key: "jpmorgan", label: "JPMorgan" },
+  { key: "AAPL", label: "Apple" },
+  { key: "GOOGL", label: "Google" },
+  { key: "MSFT", label: "Microsoft" },
+  { key: "IBM", label: "IBM" },
+  { key: "JPM", label: "JPMorgan" },
 ];
 
 export function isCompanyKey(value: string): value is CompanyKey {
-  return COMPANY_OPTIONS.some((company) => company.key === value);
+  return /^[A-Za-z0-9]{1,5}$/.test(value);
 }

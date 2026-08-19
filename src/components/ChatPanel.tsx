@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -35,12 +36,15 @@ export function ChatPanel({ context, companyName }: { context: string; companyNa
         body: JSON.stringify({ messages: nextMessages, systemContext: context, companyName }),
       });
 
-      if (!response.ok) throw new Error("Chat request failed");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.error || "Chat request failed");
+      }
 
       const data = await response.json();
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply ?? "No response generated." }]);
-    } catch {
-      setError("Unable to reach AI analyst right now.");
+    } catch (err: any) {
+      setError(err.message || "Unable to reach AI analyst right now.");
     } finally {
       setLoading(false);
     }
@@ -72,7 +76,17 @@ export function ChatPanel({ context, companyName }: { context: string; companyNa
                 message.role === "user" ? "bg-blue-700 text-white" : "bg-slate-200 text-slate-700"
               }`}
             >
-              {message.content}
+              <div 
+                className={`prose prose-sm max-w-none ${
+                  message.role === "user" 
+                    ? "prose-invert" 
+                    : "prose-slate"
+                }`}
+              >
+                <ReactMarkdown>
+                  {message.content}
+                </ReactMarkdown>
+              </div>
             </div>
           </div>
         ))}

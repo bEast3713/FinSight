@@ -1,46 +1,32 @@
+import { Suspense } from "react";
 import { ChatPanel } from "@/components/ChatPanel";
 import { CompanyHeader } from "@/components/CompanyHeader";
-import { CompanySelector } from "@/components/CompanySelector";
-import { GrowthChart } from "@/components/GrowthChart";
+import { SearchBar } from "@/components/SearchBar";
+import { NewsFeed } from "@/components/NewsFeed";
 import { HealthScore } from "@/components/HealthScore";
 import { MetricCard } from "@/components/MetricCard";
 import { Navbar } from "@/components/Navbar";
-import { RevenueChart } from "@/components/RevenueChart";
-import { StockChart } from "@/components/StockChart";
+import { DashboardSkeleton } from "@/components/DashboardSkeleton";
+import { DashboardError } from "@/components/DashboardError";
 import { formatBillions, formatTrillions } from "@/lib/formatters";
+
+import { RevenueChart } from "@/components/RevenueChart";
+import { GrowthChart } from "@/components/GrowthChart";
+import { StockChart } from "@/components/StockChart";
 import { computeHealthScore } from "@/lib/healthScore";
 import { COMPANY_OPTIONS, isCompanyKey } from "@/lib/companies";
 import { linearRegression } from "@/lib/regression";
-import type { CompanyKey, CompanyMeta, DebtDatum, EpsDatum, MarketCapDatum, RevenueDatum, StockDatum } from "@/types";
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import { getCompanyData } from "@/lib/yahoo";
 
-async function readData<T>(fileName: string): Promise<T> {
-  const filePath = path.join(process.cwd(), "public", "data", fileName);
-  const content = await fs.readFile(filePath, "utf8");
-  return JSON.parse(content) as T;
-}
+async function DashboardContent({ selectedCompany }: { selectedCompany: string }) {
+  let data;
+  try {
+    data = await getCompanyData(selectedCompany);
+  } catch (error) {
+    return <DashboardError error={error as Error} />;
+  }
 
-async function loadCompanyData(company: CompanyKey) {
-  return Promise.all([
-    readData<RevenueDatum[]>(`${company}_revenue.json`),
-    readData<StockDatum[]>(`${company}_stock.json`),
-    readData<EpsDatum[]>(`${company}_eps.json`),
-    readData<DebtDatum[]>(`${company}_debt.json`),
-    readData<MarketCapDatum[]>(`${company}_market_cap.json`),
-    readData<CompanyMeta>(`${company}_meta.json`),
-  ]);
-}
-
-export default async function Home({
-  searchParams,
-}: {
-  searchParams?: Promise<{ company?: string }>;
-}) {
-  const params = (await searchParams) ?? {};
-  const selectedCompany = params.company && isCompanyKey(params.company) ? params.company : COMPANY_OPTIONS[0].key;
-
-  const [revenue, stock, eps, debt, marketCap, meta] = await loadCompanyData(selectedCompany);
+  const { meta, revenue, stock, eps, debt, marketCap, news } = data;
 
   const latestRevenue = revenue.at(-1)!;
   const prevRevenue = revenue.at(-2)!;
@@ -57,23 +43,37 @@ export default async function Home({
   const revenueRegression = linearRegression(points.map((item) => ({ x: item.year, y: item.revenue_billions })));
   const incomeRegression = linearRegression(points.map((item) => ({ x: item.year, y: item.net_income_billions })));
 
-  const revenueChartData = [
-    ...revenue.map((item) => ({ year: item.year, revenue: item.revenue_billions, netIncome: item.net_income_billions })),
+  const lastYear = revenue.at(-1)!.year;
+  const nextYear1 = lastYear + 1;
+  const nextYear2 = lastYear + 2;
+
+  const revenueChartData = revenue.map((item, index) => {
+    const isLast = index === revenue.length - 1;
+    return {
+      year: item.year,
+      revenue: item.revenue_billions,
+      netIncome: item.net_income_billions,
+      // Start the forecast line exactly at the last historical point so they connect seamlessly
+      ...(isLast ? { forecastRevenue: item.revenue_billions, forecastNetIncome: item.net_income_billions } : {}),
+    };
+  });
+
+  revenueChartData.push(
     {
-      year: 2024,
-      forecastRevenue: revenueRegression.forecast(2024),
-      forecastNetIncome: incomeRegression.forecast(2024),
-      revenue: revenue.at(-1)!.revenue_billions,
-      netIncome: revenue.at(-1)!.net_income_billions,
+      year: nextYear1,
+      forecastRevenue: revenueRegression.forecast(nextYear1),
+      forecastNetIncome: incomeRegression.forecast(nextYear1),
+      revenue: null as any,
+      netIncome: null as any,
     },
     {
-      year: 2025,
-      forecastRevenue: revenueRegression.forecast(2025),
-      forecastNetIncome: incomeRegression.forecast(2025),
-      revenue: revenue.at(-1)!.revenue_billions,
-      netIncome: revenue.at(-1)!.net_income_billions,
-    },
-  ];
+      year: nextYear2,
+      forecastRevenue: revenueRegression.forecast(nextYear2),
+      forecastNetIncome: incomeRegression.forecast(nextYear2),
+      revenue: null as any,
+      netIncome: null as any,
+    }
+  );
 
   const growthData = revenue.slice(1).map((item, idx) => ({
     year: item.year,
@@ -92,27 +92,58 @@ export default async function Home({
   });
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
-      <main className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-6">
-        <CompanySelector selected={selectedCompany} />
+      <div className="mt-8">
         <CompanyHeader meta={meta} />
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard title="Revenue" value={formatBillions(latestRevenue.revenue_billions)} delta={revenueDelta} />
           <MetricCard title="Net Income" value={formatBillions(latestRevenue.net_income_billions)} delta={incomeDelta} />
           <MetricCard title="Market Cap" value={formatTrillions(latestMarketCap.market_cap_billions)} delta={marketCapDelta} />
           <HealthScore score={health.score} context={systemContext} companyName={meta.name} />
         </section>
 
-        <RevenueChart data={revenueChartData} />
+        <div className="mt-8">
+          <RevenueChart data={revenueChartData} />
+        </div>
 
-        <section className="grid gap-4 lg:grid-cols-2">
+        <section className="mt-8 grid gap-4 lg:grid-cols-2">
           <GrowthChart data={growthData} />
           <StockChart data={stockData} />
         </section>
 
-        <ChatPanel context={systemContext} companyName={meta.name} />
+        <section className="mt-8 grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <ChatPanel context={systemContext} companyName={meta.name} />
+          </div>
+          <div className="lg:col-span-1">
+            <NewsFeed news={news} />
+          </div>
+        </section>
+      </div>
+    );
+}
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: Promise<{ company?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
+  const selectedCompany = params.company && isCompanyKey(params.company) ? params.company : COMPANY_OPTIONS[0].key;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/50 relative overflow-hidden">
+      {/* Decorative background blobs */}
+      <div className="absolute top-0 -left-40 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+      <div className="absolute top-0 -right-40 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+      
+      <Navbar />
+      <main className="mx-auto flex max-w-7xl flex-col px-6 py-8 relative z-10">
+        <SearchBar selected={selectedCompany} />
+        
+        <Suspense fallback={<DashboardSkeleton />}>
+          <DashboardContent selectedCompany={selectedCompany} />
+        </Suspense>
       </main>
     </div>
   );

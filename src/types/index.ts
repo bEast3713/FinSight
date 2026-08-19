@@ -1,4 +1,4 @@
-export type CompanyKey = "apple" | "google" | "microsoft" | "ibm" | "jpmorgan";
+export type CompanyKey = string;
 
 export type RevenueDatum = {
   year: number;
@@ -41,4 +41,12 @@ export type HealthBreakdown = {
   weight: number;
   rawScore: number;
   weightedScore: number;
+};
+
+export interface NewsDatum {
+  uuid: string;
+  title: string;
+  publisher: string;
+  link: string;
+  providerPublishTime: number | string | Date;
 };

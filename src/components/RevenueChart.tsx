@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type Row = {
@@ -11,11 +12,12 @@ type Row = {
 };
 
 export function RevenueChart({ data }: { data: Row[] }) {
+  console.log("RevenueChart data:", data);
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4">
       <h3 className="mb-3 text-sm font-semibold text-slate-600">Revenue & Net Income</h3>
       <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={320}>
           <LineChart data={data}>
             <XAxis dataKey="year" />
             <YAxis unit="B" />

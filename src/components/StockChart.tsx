@@ -6,11 +6,11 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 const ranges = ["1Y", "3Y", "5Y", "All"] as const;
 
 export function StockChart({ data }: { data: { date: string; close: number }[] }) {
-  const [range, setRange] = useState<(typeof ranges)[number]>("All");
+  const [range, setRange] = useState<(typeof ranges)[number]>("1Y");
 
   const filtered = useMemo(() => {
     if (range === "All") return data;
-    const months = range === "1Y" ? 2 : range === "3Y" ? 6 : 10;
+    const months = range === "1Y" ? 12 : range === "3Y" ? 36 : 60;
     return data.slice(-months);
   }, [data, range]);
 
@@ -32,7 +32,7 @@ export function StockChart({ data }: { data: { date: string; close: number }[] }
         </div>
       </div>
       <div className="h-72">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={288}>
           <AreaChart data={filtered}>
             <XAxis dataKey="date" tickFormatter={(d: string) => d.slice(0, 7)} />
             <YAxis />

@@ -4,8 +4,11 @@ type InputMessage = { role: "user" | "assistant"; content: string };
 
 export async function POST(req: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "GEMINI_API_KEY is missing" }, { status: 500 });
+  if (!apiKey || apiKey === "AIzaSyCD2T7AerFqCtpyDMgbFmuEfK4nTXYZcow") {
+    return NextResponse.json(
+      { error: "Please add your Gemini API Key in .env.local to enable AI Chat." },
+      { status: 401 }
+    );
   }
 
   const body = (await req.json()) as { messages: InputMessage[]; systemContext: string; companyName?: string };
@@ -13,7 +16,7 @@ export async function POST(req: Request) {
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
@@ -23,9 +26,9 @@ export async function POST(req: Request) {
           systemInstruction: {
             parts: [
               {
-                text: `You are a financial analyst for ${companyName}. You have access to the following data:
+                text: `You are an expert financial analyst for ${companyName}. You have access to the following REAL-TIME live market data:
 ${body.systemContext}
-Answer questions concisely. Cite specific numbers from the data. Do not invent data.`,
+Analyze the data provided. Answer questions concisely, cite specific numbers, and do not invent data.`,
               },
             ],
           },
